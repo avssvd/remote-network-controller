@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package report.v1;
 
-option go_package = "https://github.com/avssvd/remote-network-controller/tree/dev/gen/proto/go/message";
+option go_package = "https://github.com/avssvd/remote-network-controller/gen/proto/go/message";
 
 message PutMessageRequest {
   string text = 1;
