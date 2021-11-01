@@ -9,8 +9,6 @@ import (
 )
 
 func main() {
-
-	//var handler telnet.Handler = telnet.EchoHandler
 	var handler telnet.Handler = StubDeviceTelnetHandler{}
 
 	err := telnet.ListenAndServe(":5555", handler)
@@ -20,7 +18,7 @@ func main() {
 	}
 }
 
-type StubDeviceTelnetHandler struct {}
+type StubDeviceTelnetHandler struct{}
 
 func (handler StubDeviceTelnetHandler) ServeTELNET(ctx telnet.Context, w telnet.Writer, r telnet.Reader) {
 	clientChan := make(chan []byte)
@@ -28,16 +26,15 @@ func (handler StubDeviceTelnetHandler) ServeTELNET(ctx telnet.Context, w telnet.
 	spamChan := make(chan []byte)
 	go GetSpamChan(spamChan)
 
-
 	for {
 		select {
-		case msg := <- clientChan:
+		case msg := <-clientChan:
 			_, err := oi.LongWrite(w, []byte(fmt.Sprintf("Answer: %s\n", string(msg))))
 			if err != nil {
 				log.Printf("ServeTELNET clientChan: %s/n", err.Error())
 			}
 
-		case spam := <- spamChan:
+		case spam := <-spamChan:
 			_, err := oi.LongWrite(w, spam)
 			if err != nil {
 				log.Printf("ServeTELNET spamChan: %s/n", err.Error())
@@ -46,10 +43,10 @@ func (handler StubDeviceTelnetHandler) ServeTELNET(ctx telnet.Context, w telnet.
 	}
 }
 
-func GetClientChan(r telnet.Reader, ch chan []byte) {
+func GetClientChan(r telnet.Reader, ch chan<- []byte) {
 	var buffer [1]byte // Seems like the length of the buffer needs to be small, otherwise will have to wait for buffer to fill up.
 	p := buffer[:]
-	capacitor := make([]byte, 0, 100)
+	capacitor := make([]byte, 0, 1000)
 	for {
 		n, err := r.Read(p)
 		if err != nil {
@@ -68,9 +65,9 @@ func GetClientChan(r telnet.Reader, ch chan []byte) {
 	}
 }
 
-func GetSpamChan(ch chan []byte) {
+func GetSpamChan(ch chan<- []byte) {
 	for {
-		ch <- []byte(time.Now().String()+"\n")
-		time.Sleep(3*time.Second)
+		ch <- []byte(time.Now().String() + "\n")
+		time.Sleep(3 * time.Second)
 	}
 }
