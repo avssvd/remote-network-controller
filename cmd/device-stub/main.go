@@ -49,21 +49,28 @@ func (handler StubDeviceTelnetHandler) ServeTELNET(ctx telnet.Context, w telnet.
 func GetClientChan(r telnet.Reader, ch chan []byte) {
 	var buffer [1]byte // Seems like the length of the buffer needs to be small, otherwise will have to wait for buffer to fill up.
 	p := buffer[:]
+	capacitor := make([]byte, 0, 100)
 	for {
 		n, err := r.Read(p)
 		if err != nil {
-			log.Printf("GetClientChan: %s\n", err.Error())
+			//log.Printf("GetClientChan: %s\n", err.Error())
 			continue
 		}
+
 		if n > 0 {
-			ch <- p
+			if buffer[0] == '\n' {
+				ch <- capacitor
+				capacitor = capacitor[:0]
+			} else {
+				capacitor = append(capacitor, buffer[0])
+			}
 		}
 	}
 }
 
 func GetSpamChan(ch chan []byte) {
 	for {
-		ch <- []byte(time.Now().String())
+		ch <- []byte(time.Now().String()+"\n")
 		time.Sleep(3*time.Second)
 	}
 }
